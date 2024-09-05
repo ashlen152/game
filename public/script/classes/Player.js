@@ -16,4 +16,3 @@ class Player {
     ctx.fill()
   }
 }
-

@@ -29,6 +29,9 @@ socket.on('updatePlayers', (remotePlayers) => {
         color: remotePlayer.color
       })
     }
+    else {
+      players[id].position = remotePlayer.position
+    }
   }
 
   for (const id in players) {

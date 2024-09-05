@@ -3,6 +3,8 @@ import dotenv from 'dotenv'
 import http from 'http'
 import socket from 'socket.io'
 import { join } from 'path'
+import { syncIntervalPlayerTime, pingTimeout, pingIntervalTime, SPEED } from './constants'
+import { InputMeta } from './type'
 
 dotenv.config()
 
@@ -11,7 +13,7 @@ const server = http.createServer(app)
 const port = process.env.PORT
 
 const { Server } = socket
-const io = new Server(server, { pingInterval: 2000, pingTimeout: 5000 })
+const io = new Server(server, { pingInterval: pingIntervalTime, pingTimeout: pingTimeout })
 
 type Player = {
   position: {
@@ -21,13 +23,11 @@ type Player = {
   color: string
 }
 
-
 const players: Record<string, Player> = {}
-
 
 app.use(express.static('public'))
 
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.sendFile(join(__dirname, 'index.html'))
 })
 
@@ -38,8 +38,8 @@ io.on('connection', (socket) => {
   if (!players[id]) {
     players[id] = {
       position: {
-        x: 500 * Math.random(),
-        y: 500 * Math.random(),
+        x: 200 * Math.random(),
+        y: 200 * Math.random(),
       },
       color: `hsl(${360 * Math.random()}, 100%, 50%)`
     }
@@ -53,8 +53,26 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', (reason) => {
     console.log('a user diconnected: ', reason)
-    delete players[socket.id]
+    delete players[id]
     io.emit('updatePlayers', players)
   })
+
+  socket.on('updateInput', (inputMeta: InputMeta) => {
+    if (players[id] && !!inputMeta) {
+
+      for (const value of Object.values(inputMeta)) {
+        if (value.pressed) {
+          players[socket.id].position.x += value.position.x
+          players[socket.id].position.y += value.position.y
+        }
+      }
+    }
+  })
 })
+
+
+setInterval(() => {
+  io.emit('updatePlayers', players)
+}, syncIntervalPlayerTime)
+
 server.listen(port, () => { console.log(`[server]: Server is running at http://localhost:${port}`) })
