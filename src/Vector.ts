@@ -2,7 +2,7 @@ export default class Vector2 {
   x: number
   y: number
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y?: number) {
     this.x = x || 0
     this.y = y || 0
   }
@@ -15,7 +15,7 @@ export default class Vector2 {
     return new Vector2(this.x, this.y)
   }
 
-  add(x: number | Vector2, y: number) {
+  add(x: number | Vector2, y?: number) {
     if (x instanceof Vector2) {
       this.x += x.x || 0
       this.y += x.y || 0
@@ -26,7 +26,7 @@ export default class Vector2 {
     return this
   }
 
-  sub(x: number | Vector2, y: number) {
+  sub(x: number | Vector2, y?: number) {
     if (x instanceof Vector2) {
       this.x -= x.x || 0
       this.y -= x.y || 0
@@ -80,13 +80,47 @@ export default class Vector2 {
     return this.x * (x || 0) + this.y * (y || 0)
   }
 
-  cross(x: any) {
-
+  dist(v: Vector2) {
+    return v.copy().sub(this).mag()
   }
 
-  // dist(x: number | Vector2, y) {
-  //   if (x instanceof Vector) {
-  //     return new Vector2(x. )
-  //   }
-  // }
+  normalize() {
+    const len = this.mag()
+    if (len !== 0) this.mult(1 / len)
+    return this;
+  }
+
+  limit(max: number) {
+    const mSq = this.magSq();
+    if (mSq > max * max) {
+      this.div(Math.sqrt(mSq)).mult(max);
+    }
+    return this;
+  }
+
+  setMag(n: number) {
+    return this.normalize().mult(n)
+  }
+
+  lerp(x: number | Vector2, y?: number, amt?: number): Vector2 {
+    if (x instanceof Vector2) {
+      return this.lerp(x.x, x.y, y);
+    }
+    this.x += (x - this.x) * (amt || 0)
+    this.y += (x - this.y) * (amt || 0)
+    return this
+  }
+
+  equals(x: number | Vector2, y?: number) {
+    let a, b
+    if (x instanceof Vector2) {
+      a = x.x;
+      b = x.y;
+    }
+    else {
+      a = x
+      b = y
+    }
+    return this.x === a && this.y === b
+  }
 }
